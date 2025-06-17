@@ -19,7 +19,7 @@ def parse_almoxarifado(file_content):
 
     # Regex para identificar almoxarifado e linhas de dados
     almoxarifado_pattern = re.compile(r'^Almoxarifado:(.*?)\s*-\s*PBSAUDE')
-    data_pattern = re.compile(r'^(\d+)\s*-\s*([^*]+)\*+(\w+)\*+([^*]+)\*+(\w+)\*+([\d,.]+)\*([\d,.]+)\*+([\d,.]+)\*+([\d,.]+)\*+([\d,.]+)\*+([\d,.]+)\*+')
+    data_pattern = re.compile(r'(\d+)\s*-\s*([^§]+)\§+(\w+)\§+([^§]+)\§+(\w+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+')
 
     # Ler o conteúdo do arquivo como texto
     for line in file_content.decode('utf-8').splitlines():
