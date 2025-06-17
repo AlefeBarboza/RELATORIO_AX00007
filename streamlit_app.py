@@ -18,7 +18,7 @@ def parse_almoxarifado(file_content):
     reading_table = False
 
     # Regex para identificar almoxarifado e linhas de dados
-    almoxarifado_pattern = re.compile(r'^Almoxarifado:(.*?)\s*-\s*PBSAUDE')
+    almoxarifado_pattern = re.compile(r'Almoxarifado:§*(\d+)\s*-\s*([^-§]+)\s*-\s*([^-§]+)\s*-\s*([^-§]+)\s*-\s*([^-§]+)§+')
     data_pattern = re.compile(r'(\d+)\s*-\s*([^§]+)\§+(\w+)\§+([^§]+)\§+(\w+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+([\d,.]+)\§+')
 
     # Ler o conteúdo do arquivo como texto
@@ -31,7 +31,7 @@ def parse_almoxarifado(file_content):
         # Identificar almoxarifado
         almoxarifado_match = almoxarifado_pattern.match(line)
         if almoxarifado_match:
-            current_almoxarifado = almoxarifado_match.group(1).strip()[8:]  # Extrair número do almoxarifado
+            current_almoxarifado_name = f"{almoxarifado_match.group(1).strip()[5:]} - {almoxarifado_match.group(5).strip()}"  # Extrair número do almoxarifado
             reading_table = True
             continue
 
@@ -42,7 +42,7 @@ def parse_almoxarifado(file_content):
                 cod_sigbp, material, unidade_medida, finalidade_compra, endereco, qtd_indisponivel, valor_indisponivel, qtd_disponivel, valor_disponivel, qtd_total, valor_total = data_match.groups()
                 consolidated_data.append({
                     "Código": cod_sigbp,
-                    "Almoxarifado": current_almoxarifado,
+                    "Almoxarifado": current_almoxarifado_name,
                     "Material": material.strip(),
                     "U.M.": unidade_medida.strip(),
                     "Qtd total": qtd_total.strip(),
@@ -73,7 +73,11 @@ def parse_almoxarifado(file_content):
 
     # Criar uma aba para cada almoxarifado
     for almoxarifado, group_df in grouped:
-        ws = wb.create_sheet(title=sanitize_sheet_name(almoxarifado))  # Criar aba com nome sanitizado
+        # Create a valid sheet title by replacing invalid characters (like '/')
+        valid_sheet_title = str(almoxarifado).replace('/', '-')
+
+        # Criar uma nova aba com o nome do almoxarifado
+        ws = wb.create_sheet(title=valid_sheet_title)
 
         # Escrever o DataFrame na planilha
         for r in dataframe_to_rows(group_df, index=False, header=True):
