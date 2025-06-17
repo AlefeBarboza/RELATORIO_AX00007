@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 import re
 import io
 
@@ -41,8 +42,8 @@ def parse_almoxarifado(file_content):
             if data_match:
                 cod_sigbp, material, unidade_medida, finalidade_compra, endereco, qtd_indisponivel, valor_indisponivel, qtd_disponivel, valor_disponivel, qtd_total, valor_total = data_match.groups()
                 consolidated_data.append({
-                    "Código": cod_sigbp,
                     "Almoxarifado": current_almoxarifado_name,
+                    "Código": cod_sigbp,                    
                     "Material": material.strip(),
                     "U.M.": unidade_medida.strip(),
                     "Qtd total": qtd_total.strip(),
@@ -68,6 +69,22 @@ def parse_almoxarifado(file_content):
     wb = Workbook()
     wb.remove(wb.active)  # Remover aba padrão
 
+    # Definir cores para estilização
+    header_fill = PatternFill(start_color="006400", end_color="006400", fill_type="solid")  # Verde escuro para cabeçalho
+    green_fill = PatternFill(start_color="DAF2D0", end_color="DAF2D0", fill_type="solid")  # Verde claro
+    white_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")  # Branco
+    gray_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")   # Cinza claro
+    header_font = Font(bold=True, color="FFFFFF")  # Fonte branca e negrito para cabeçalho
+    center_alignment = Alignment(horizontal="center", vertical="center")  # Alinhamento central
+
+    # Definir bordas finas
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+       
     # Agrupar por almoxarifado
     grouped = df.groupby('Almoxarifado')
 
@@ -83,6 +100,28 @@ def parse_almoxarifado(file_content):
         for r in dataframe_to_rows(group_df, index=False, header=True):
             ws.append(r)
 
+       # Aplicar estilo ao cabeçalho (primeira linha)
+            if r_idx == 1:
+                for c_idx, cell in enumerate(ws[r_idx], 1):
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = center_alignment
+                    cell.border = thin_border  # Adicionar bordas ao cabeçalho
+            else:
+                # Aplicar cores alternadas nas colunas A até G (1 a 7)
+                for c_idx in range(1, 8):
+                    cell = ws.cell(row=r_idx, column=c_idx)
+                    cell.fill = green_fill if (r_idx % 2 == 0) else white_fill
+                    cell.alignment = center_alignment
+                    cell.border = thin_border  # Adicionar bordas às colunas A-G
+
+                # Aplicar cinza claro nas colunas H e I (8 e 9)
+                for c_idx in range(8, 10):
+                    cell = ws.cell(row=r_idx, column=c_idx)
+                    cell.fill = gray_fill
+                    cell.alignment = center_alignment
+                    cell.border = thin_border  # Adicionar bordas às colunas H-I
+        
         # Identificar colunas no Excel
         col_qtd_total = 5  # Coluna E
         col_incorporacao_baixa = 8  # Coluna H
@@ -91,7 +130,21 @@ def parse_almoxarifado(file_content):
         # Inserir fórmula na coluna H
         for row in range(2, len(group_df) + 2):
             ws.cell(row=row, column=col_incorporacao_baixa).value = f'=E{row}-I{row}'
+            ws.cell(row=row, column=col_incorporacao_baixa).border = thin_border  # Garantir borda na célula com fórmula
 
+          # Ajustar largura das colunas para melhor visualização
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)  # Limitar largura máxima
+            ws.column_dimensions[column].width = adjusted_width
+   
     # Salvar o workbook em um buffer
     buffer = io.BytesIO()
     wb.save(buffer)
