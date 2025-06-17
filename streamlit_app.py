@@ -97,7 +97,7 @@ def parse_almoxarifado(file_content):
         ws = wb.create_sheet(title=valid_sheet_title)
 
         # Escrever o DataFrame na planilha
-        for r in dataframe_to_rows(group_df, index=False, header=True):
+        for r_idx, r in enumerate(dataframe_to_rows(group_df, index=False, header=True), 1):
             ws.append(r)
 
        # Aplicar estilo ao cabeçalho (primeira linha)
