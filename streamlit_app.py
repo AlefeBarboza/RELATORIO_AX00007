@@ -150,7 +150,7 @@ def parse_almoxarifado(file_content):
         col_qtd_total = 6          # coluna F → Qtd total
         col_inc_baixa = 9          # coluna I
         for row in range(2, len(grupo) + 2):
-            ws.cell(row=row, column=col_inc_baixa).value = f"=F{row}-J{row}"
+            ws.cell(row=row, column=col_inc_baixa).value = f"=J{row}-F{row}"
             ws.cell(row=row, column=col_inc_baixa).border = thin_border
 
         # Ajuste automático de largura das colunas
